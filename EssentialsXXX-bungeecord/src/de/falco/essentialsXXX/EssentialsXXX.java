@@ -18,7 +18,7 @@ public class EssentialsXXX extends Plugin{
 	
 	//de.falco.essentialsXXX.EssentialsXXX
 	
-	//config and main t
+	//config and main
 	private ConfigFile EssentialsXXXconfig;
 	private static EssentialsXXX EssentialsXXXmain;
 	
