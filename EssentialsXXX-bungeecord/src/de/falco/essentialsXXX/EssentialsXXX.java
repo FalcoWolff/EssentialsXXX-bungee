@@ -22,7 +22,7 @@ public class EssentialsXXX extends Plugin{
 	private ConfigFile EssentialsXXXconfig;
 	private static EssentialsXXX EssentialsXXXmain;
 	
-	//plugin name f
+	//plugin name f f
 	private String name;
 	private String prefix;
 	private String chatprefix;
