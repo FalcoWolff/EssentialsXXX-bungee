@@ -32,7 +32,7 @@ public class DebugListener implements Listener, de.falco.essentialsXXX.data.Data
 		System.out.println(uuid);
 		
 		
-		Map<String,String> data = getData(uuid);
+		Map<String,String> data = getData(uuid,"test");
 		 
 		System.out.println("get fields");
 		

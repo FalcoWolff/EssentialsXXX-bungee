@@ -4,14 +4,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class DataManager {
+public class DataListenerManager {
 	
 	private static Map<String,DataListener> listener = new LinkedHashMap<>();
 	
-	public static Map<String,String> sendDataRequest(UUID uuid) {
+	public static Map<String,String> sendDataRequest(DataRequestEvent e) {
 		
 		Map<String,String> data = new LinkedHashMap<>();
-		DataRequestEvent e = new DataRequestEvent(uuid);
 		
 		for(String key : listener.keySet()) {
 			DataListener d = listener.get(key);

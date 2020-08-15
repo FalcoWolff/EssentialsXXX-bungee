@@ -2,10 +2,8 @@ package de.falco.essentialsXXX;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-import de.falco.essentialsXXX.depraced.DebugListener;
+
+import de.falco.essentialsXXX.data.DataManager;
 import de.falco.essentialsXXX.exception.NoPexException;
 import de.falco.essentialsXXX.exception.NoServerException;
 import de.falco.essentialsXXX.id.PlayerJoinListener;
@@ -27,11 +25,6 @@ public class EssentialsXXX extends Plugin{
 	private String prefix;
 	private String chatprefix;
 	
-	
-	//config fields
-	private Map<String,Map<String,String>> EssentialsXXXgroups;
-	private Map<UUID,Map<String,String>> EssentialsXXXplayer;
-	
 	//error message fields
 	private String EssentialsXXXnotaplayer;
 	private String EssentialsXXXnotonline;
@@ -42,6 +35,9 @@ public class EssentialsXXX extends Plugin{
 	private MySql idmysql;
 	private de.falco.essentialsXXX.id.ConfigFile idconfig;
 	private PlayerJoinListener idevent;
+	
+	//DataManager
+	private DataManager datamanager;
 	
 	public static void main(String[] args) {
 		System.out.println("hahah wft");
@@ -65,8 +61,10 @@ public class EssentialsXXX extends Plugin{
 		loadConfigs();
 		
 		//load fields groups and player
+		datamanager = new DataManager(this);
+		
 		try {
-			loadfields();
+			datamanager.loadfields();
 		} catch (NoServerException | NoPexException e) {
 			e.printStackTrace();
 		}
@@ -147,116 +145,14 @@ public class EssentialsXXX extends Plugin{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	private void loadfields() throws NoServerException, NoPexException {
-		
-		//load groups
-		this.EssentialsXXXgroups = new LinkedHashMap<>();
-		
-		if(this.EssentialsXXXconfig.getConfig().getSection("config.groups") != null) {
-			
-			for(String group : EssentialsXXXconfig.getConfig().getSection("config.groups").getKeys()) {
-				
-				Map<String,String> tmp = new LinkedHashMap<String, String>();
-				boolean server = false;
-				boolean pex = false;
-				
-				for(String index : EssentialsXXXconfig.getConfig().getSection("config.groups." + group).getKeys()) {
-					
-					if(index.equals("server")) {
-						server = true;
-						if(EssentialsXXXconfig.getConfig().getString("config.groups." + group + "." + index).equals("")) {
-							server = false;
-						}
-					}
-					
-					if(index.equals("pex")) {
-						pex = true;
-					}
-					
-					tmp.put(index, EssentialsXXXconfig.getConfig().getString("config.groups." + group + "." + index));
-					
-				}
-				
-				if(server == false) {
-					throw new NoServerException(prefix + " error in group " + group + " no server!");
-				}
-				
-				if(pex == false) {
-					throw new NoPexException(prefix + " error in group " + group + " no pex!");
-				}
-				
-				System.out.println(prefix + " add group " + group);
-				
-				this.EssentialsXXXgroups.put(group, tmp);
-			}
-			
-			
-		}else {
-			System.out.println(prefix + " no groups in config");
-			//keine groups
-		}
-		
-		
-		//load player
-		this.EssentialsXXXplayer = new LinkedHashMap<>();
-		if(EssentialsXXXconfig.getConfig().getSection("config.player") != null) {
-			
-			for(String player : EssentialsXXXconfig.getConfig().getSection("config.player").getKeys()) {
-				
-				UUID uuid;
-				
-				try {
-					uuid = UUID.fromString(player);
-				}catch(Exception ex) {
-					
-					System.out.println(prefix + " error in player " + player + " invalid uuid");
-					
-					continue;
-				}
-				
-				
-				Map<String,String> tmp = new LinkedHashMap<String,String>();
-				boolean server = false;
-				
-				for(String index : EssentialsXXXconfig.getConfig().getSection("config.player." + player).getKeys()) {
-					
-					if(index.equals("server")) {
-						server = true;
-						if(EssentialsXXXconfig.getConfig().getString("config.player." + player + "." + index).equals("")) {
-							server = false;
-						}
-					}
-					
-					tmp.put(index, EssentialsXXXconfig.getConfig().getString("config.player." + player + "." + index));
-					
-					
-				}
-				
-				if(server == false) {
-					throw new NoServerException(prefix + " error in player " + player + " no server!");
-				}
-				
-				//Data data = new Data(player,tmp);
-				
-				System.out.println(prefix + " load player " + player);
-				
-				this.EssentialsXXXplayer.put(uuid, tmp);
-				
-			}
-			
-			
-			
-		}else {//no player
-			System.out.println(prefix + " no player");
-		}
 		
 		//load error messages
 		this.EssentialsXXXnotaplayer = EssentialsXXXconfig.getConfig().getString("config.message.error.notaplayer");
 		this.EssentialsXXXnotonline = EssentialsXXXconfig.getConfig().getString("config.message.error.notonline");
 		this.EssentialsXXXsyntax = EssentialsXXXconfig.getConfig().getString("config.message.error.syntax");
 		this.EssentialsXXXnopex = EssentialsXXXconfig.getConfig().getString("config.message.error.nopex");
+			
+		
 	}
 	
 	
@@ -264,13 +160,6 @@ public class EssentialsXXX extends Plugin{
 	/*
 	 * getter and setter
 	 */
-	public Map<String, Map<String, String>> getEssentialsXXXgroups() {
-		return EssentialsXXXgroups;
-	}
-	
-	public Map<UUID, Map<String, String>> getEssentialsXXXplayer() {
-		return EssentialsXXXplayer;
-	}
 	
 	public String getEssentialsXXXnotaplayer() {
 		return EssentialsXXXnotaplayer;
@@ -286,6 +175,10 @@ public class EssentialsXXX extends Plugin{
 	
 	public String getEssentialsXXXsyntax() {
 		return EssentialsXXXsyntax;
+	}
+	
+	public ConfigFile getEssentialsXXXconfig() {
+		return EssentialsXXXconfig;
 	}
 	
 	public MySql getIdmysql() {
@@ -305,6 +198,10 @@ public class EssentialsXXX extends Plugin{
 	}
 	public String getChatprefix() {
 		return chatprefix;
+	}
+	
+	public DataManager getDatamanager() {
+		return datamanager;
 	}
 	
 	

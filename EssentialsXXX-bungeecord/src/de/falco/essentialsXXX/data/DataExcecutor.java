@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import de.falco.essentialsXXX.EssentialsXXX;
+import de.falco.essentialsXXX.data.datatypes.DataGroup;
+import de.falco.essentialsXXX.data.datatypes.DataPlayer;
 import de.falco.essentialsXXX.id.NotregisteredException;
 import de.falco.essentialsXXX.id.PlayerData;
 import de.falco.essentialsXXX.id.UserProfile;
@@ -31,18 +33,19 @@ public interface DataExcecutor extends PlayerData{
 	 * @param playername
 	 * @return Map<String,String> with the key: "player" and the value playername
 	 */
-	default Map<String,String> getData(String playername) {
+	default Map<String,String> getData(String playername, String server) {
 		
 		try {
 			
 			UserProfile u = getUserProfilebyUsername(playername);
 			
-			return getData(u.getUuid(), playername);
+			return getData(u.getUuid(), playername, server);
 			
 		} catch (NotregisteredException e) {
 			
 			Map<String,String> end = new LinkedHashMap<>();
 			end.put("player", playername);
+			end.put("server", server);
 			
 			return end;
 			
@@ -57,17 +60,18 @@ public interface DataExcecutor extends PlayerData{
 	 * @param uuid
 	 * @return list with keys and values. When player didn't join there will be only one pair key: "player" value: "unknown"
 	 */
-	default Map<String,String> getData(UUID uuid) {
+	default Map<String,String> getData(UUID uuid, String server) {
 		
 		try {
 			
 			UserProfile u = getUserProfilebyuuid(uuid);
-			return getData(uuid,u.getLastname());
+			return getData(uuid, u.getLastname(), server);
 			
 		} catch (NotregisteredException e) {
 			
 			Map<String,String> end = new LinkedHashMap<>();
 			end.put("uuid", uuid.toString());
+			end.put("server", server);
 			
 			return end;
 			
@@ -83,26 +87,34 @@ public interface DataExcecutor extends PlayerData{
 	 * @param pname
 	 * @return list with keys and values. When player didn't join there will be only one pair key: "player" value: pname
 	 */
-	default Map<String,String> getData(UUID uuid, String pname) {
+	default Map<String,String> getData(UUID uuid, String pname, String server) {
 		
 		EssentialsXXX main = EssentialsXXX.getEssentialsXXXmain();
 		
 		ProxiedPlayer p = EssentialsXXX.getEssentialsXXXmain().getProxy().getPlayer(uuid);
 		
-		Map<String,String> data = DataManager.sendDataRequest(uuid);
+		DataRequestEvent e = new DataRequestEvent(uuid, server, pname);
+		
+		Map<String,String> data = DataListenerManager.sendDataRequest(e);
 		
 		data.put("player", pname);
 		data.put("uuid", uuid + "");
+		data.put("server", server);
 		
 		//check the player section before the group section
-		for(UUID playername : main.getEssentialsXXXplayer().keySet()) {
+		for(UUID playername : main.getDatamanager().getPlayers().keySet()) {
 			
 			if(!uuid.equals(playername)) {
 				continue;
 			}
 			
+			DataPlayer data_player= main.getDatamanager().getPlayer(playername);
 			
-			Map<String,String> d = main.getEssentialsXXXplayer().get(playername);
+			if(!data_player.getServername().equals(server) && !data_player.getServername().equals("")) {
+				continue;
+			}
+			
+			Map<String,String> d = data_player.getFields();
 			
 			for(String tmp : d.keySet()) {
 				data.put(tmp, d.get(tmp));
@@ -113,10 +125,11 @@ public interface DataExcecutor extends PlayerData{
 		}
 		
 		//group section
-		for(String groupname : main.getEssentialsXXXgroups().keySet()) {
+		for(String groupname : main.getDatamanager().getGroups().keySet()) {
 			
+			DataGroup data_group = main.getDatamanager().getGroup(groupname);
 			
-			String pexG = main.getEssentialsXXXgroups().get(groupname).get("pex");
+			String pexG = data_group.getPex();
 			
 			if(p != null) {
 				
@@ -125,7 +138,7 @@ public interface DataExcecutor extends PlayerData{
 					continue;
 				}
 				
-				Map<String,String> d = main.getEssentialsXXXgroups().get(groupname);
+				Map<String,String> d = data_group.getFields();
 				
 				for(String tmp : d.keySet()) {
 					data.put(tmp, d.get(tmp));
@@ -147,7 +160,7 @@ public interface DataExcecutor extends PlayerData{
 				
 				
 				
-				Map<String,String> d = main.getEssentialsXXXgroups().get(groupname);
+				Map<String,String> d = data_group.getFields();
 				
 				for(String tmp : d.keySet()) {
 					data.put(tmp, d.get(tmp));
@@ -178,11 +191,11 @@ public interface DataExcecutor extends PlayerData{
 	 * @return
 	 */
 	default String changeMessage(String message, Map<String,String> data, String suffix) {
-			
+		
 		if(message == null || data == null || suffix == null) {
 			throw new IllegalArgumentException("parameter couldnt be null");
 		}
-	
+		
 		for(String i : data.keySet()) {
 				
 			message = message.replaceAll("§" + i + suffix, data.get(i));
