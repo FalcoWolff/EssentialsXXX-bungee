@@ -62,12 +62,7 @@ public class EssentialsXXX extends Plugin{
 		
 		//load fields groups and player
 		datamanager = new DataManager(this);
-		
-		try {
-			datamanager.loadfields();
-		} catch (NoServerException | NoPexException e) {
-			e.printStackTrace();
-		}
+		datamanager.loadfields();
 		
 		//load db connection an try to connect
 		loadDBConnections();

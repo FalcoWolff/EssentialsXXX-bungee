@@ -52,7 +52,7 @@ public class DataManager {
 		return players.containsKey(uuid);
 	}
 	
-	public void loadfields() throws NoServerException, NoPexException {
+	public void loadfields() {
 		
 		//load groups
 		if(config.getConfig().getSection("config.groups") != null) {
@@ -81,11 +81,21 @@ public class DataManager {
 				}
 				
 				if(server == null) {
-					throw new NoServerException(main.getPrefix() + " error in group " + group + " no server!");
+					try {
+						throw new NoServerException(main.getPrefix() + " error in group " + group + " no server!");
+					}catch(NoServerException ex) {
+						ex.printStackTrace();
+					}
+					continue;
 				}
 				
 				if(pex == null) {
-					throw new NoPexException(main.getPrefix() + " error in group " + group + " no pex!");
+					try {
+						throw new NoPexException(main.getPrefix() + " error in group " + group + " no pex!");	
+					}catch(NoPexException ex) {
+						ex.printStackTrace();
+					}
+					continue;
 				}
 				
 				DataGroup g = new DataGroup(server, pex);
@@ -113,9 +123,7 @@ public class DataManager {
 				UUID uuid;
 				
 				try {
-					
 					uuid = UUID.fromString(player);
-					
 				}catch(Exception ex) {
 					System.out.println(main.getPrefix()+ " error in player " + player + " invalid uuid");
 					continue;
@@ -138,7 +146,12 @@ public class DataManager {
 				}
 				
 				if(server == null) {
-					throw new NoServerException(main.getPrefix() + " error in player " + player + " no server!");
+					try {
+						throw new NoServerException(main.getPrefix() + " error in player " + player + " no server!");	
+					}catch(NoServerException ex) {
+						ex.printStackTrace();
+					}
+					
 				}
 				
 				//Data data = new Data(player,tmp);
